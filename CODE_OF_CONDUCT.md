@@ -31,3 +31,22 @@ docs: mise à jour README
 3. `Analyseur.java`
 4. `Operations.java`
 5. `GarbageCollector.java`
+
+
+
+### Branches Git
+- Format : `prenom/fonctionnalite`
+
+Exemples :
+```
+abdoulaye/analyseur
+abdoulaye/monome
+abdoulaye/operations
+abdoulaye/garbage-collector
+```
+
+Et pour créer une branche :
+
+```
+git checkout -b abdoulaye/analyseur
+```
