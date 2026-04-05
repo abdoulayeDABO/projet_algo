@@ -58,11 +58,7 @@ public class Analyseur {
     }
 
     // xpuissance -> 'X' | 'X' '^' naturel
-    private void analyserXpuissance() {
-    if (caractereCourant() != 'X') erreur("'X' attendu");
-    avancer();
-    if (caractereCourant() == '^') { avancer(); analyserNaturelValeur(); }
-    }
+    
 
     // monome -> nombre '*' xpuissance | xpuissance | nombre
     private void analyserMonome(double signe) {
