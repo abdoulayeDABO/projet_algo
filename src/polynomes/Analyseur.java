@@ -6,10 +6,12 @@ public class Analyseur {
 
     private String texte;
     private int pos;
+    private Polynome polynome;
 
     public Analyseur(String texte) {
         this.texte = texte.replaceAll(" ", "");
         this.pos = 0;
+        this.polynome = new Polynome(null);
     }
 
     private char caractereCourant() {
@@ -32,58 +34,104 @@ public class Analyseur {
     }
 
     // naturel -> chiffre { chiffre }
-    private void analyserNaturel() {
-        if (!estChiffre()) erreur("chiffre attendu");
-        while (estChiffre()) avancer();
+    private int analyserNaturelValeur() {
+    if (!estChiffre()) erreur("chiffre attendu");
+    int val = 0;
+    while (estChiffre()) {
+        val = val * 10 + (caractereCourant() - '0');
+        avancer();
     }
-
-    // nombre -> naturel [ '.' { chiffre } ]
-    private void analyserNombre() {
-        analyserNaturel();
-        if (caractereCourant() == '.') {
+    return val;
+    }
+    private double analyserNombreValeur() {
+    double val = analyserNaturelValeur();
+    if (caractereCourant() == '.') {
+        avancer();
+        double frac = 0.1;
+        while (estChiffre()) {
+            val += (caractereCourant() - '0') * frac;
+            frac *= 0.1;
             avancer();
-            while (estChiffre()) avancer();
         }
+    }
+    return val;
     }
 
     // xpuissance -> 'X' | 'X' '^' naturel
-    private void analyserXpuissance() {
-        if (caractereCourant() != 'X') erreur("'X' attendu");
-        avancer();
-        if (caractereCourant() == '^') { avancer(); analyserNaturel(); }
-    }
+    
 
     // monome -> nombre '*' xpuissance | xpuissance | nombre
-    private void analyserMonome() {
-        if (caractereCourant() == 'X') {
-            analyserXpuissance();
-        } else if (estChiffre()) {
-            analyserNombre();
-            if (caractereCourant() == '*') { avancer(); analyserXpuissance(); }
+    private void analyserMonome(double signe) {
+    double coefficient = 1.0;
+    int exposant = 0;
+
+    if (caractereCourant() == 'X') {
+        // Cas : X ou X^n
+        coefficient = 1.0;
+        avancer();
+        if (caractereCourant() == '^') {
+            avancer();
+            exposant = analyserNaturelValeur();
         } else {
-            erreur("monome attendu");
+            exposant = 1;
         }
+    } else if (estChiffre()) {
+        // Cas : nombre seul ou nombre * X^n
+        coefficient = analyserNombreValeur();
+        if (caractereCourant() == '*') {
+            avancer();
+            if (caractereCourant() != 'X') erreur("'X' attendu");
+            avancer();
+            if (caractereCourant() == '^') {
+                avancer();
+                exposant = analyserNaturelValeur();
+            } else {
+                exposant = 1;
+            }
+        } else {
+            exposant = 0;
+        }
+    } else {
+        erreur("monome attendu");
     }
+
+    polynome.ajouterMonome(signe * coefficient, exposant);
+    }
+
 
     // polynome -> [ '-' ] monome { ( '+' | '-' ) monome }
     public void analyserPolynome() {
-        if (caractereCourant() == '-') avancer();
-        analyserMonome();
-        while (caractereCourant() == '+' || caractereCourant() == '-') {
-            avancer();
-            analyserMonome();
-        }
-        if (!finDeTexte()) erreur("caracteres inattendus en fin de polynome");
+    double signe = 1.0;
+    if (caractereCourant() == '-') {
+        signe = -1.0;
+        avancer();
+    }
+    analyserMonome(signe);
+
+    while (caractereCourant() == '+' || caractereCourant() == '-') {
+        if (caractereCourant() == '-') signe = -1.0;
+        else signe = 1.0;
+        avancer();
+        analyserMonome(signe);
+    }
+
+    if (!finDeTexte()) erreur("caracteres inattendus en fin de polynome");
+    }
+
+    public Polynome getPolynome() {
+    return polynome;
     }
 
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("=== Analyseur Syntaxique de Polynomes ===");
-        System.out.print("Saisissez un polynome : ");
-        String saisie = scanner.nextLine();
-        Analyseur analyseur = new Analyseur(saisie);
-        analyseur.analyserPolynome();
-        System.out.println("Le polynome \"" + saisie + "\" est syntaxiquement correct.");
-        scanner.close();
+    Scanner scanner = new Scanner(System.in);
+    System.out.println("=== Analyseur Syntaxique de Polynomes ===");
+    System.out.print("Saisissez un polynome : ");
+    String saisie = scanner.nextLine();
+    Analyseur analyseur = new Analyseur(saisie);
+    analyseur.analyserPolynome();
+    System.out.println("Syntaxe correcte !");
+    System.out.print("Polynome : ");
+    analyseur.getPolynome().afficher();
+    scanner.close();
     }
 }
