@@ -3,6 +3,7 @@ package polynomes;
 public class Polynome {
     Monome tete; // premier maillon de la liste
     // Constructeur — liste vide au départ
+
     public Polynome(Monome tete) {
         this.tete = tete;
     }
@@ -35,10 +36,13 @@ public class Polynome {
 
             // Signe
             if (premier) {
-                if (coef < 0) System.out.print("- ");
+                if (coef < 0)
+                    System.out.print("- ");
             } else {
-                if (coef < 0) System.out.print(" - ");
-                else          System.out.print(" + ");
+                if (coef < 0)
+                    System.out.print(" - ");
+                else
+                    System.out.print(" + ");
             }
 
             double valeur = Math.abs(coef);
@@ -47,10 +51,12 @@ public class Polynome {
             if (exp == 0) {
                 System.out.print(valeur);
             } else if (exp == 1) {
-                if (valeur != 1) System.out.print(valeur);
+                if (valeur != 1)
+                    System.out.print(valeur);
                 System.out.print("X");
             } else {
-                if (valeur != 1) System.out.print(valeur);
+                if (valeur != 1)
+                    System.out.print(valeur);
                 System.out.print("X^" + exp);
             }
 
@@ -59,4 +65,5 @@ public class Polynome {
         }
         System.out.println();
     }
+
 }
