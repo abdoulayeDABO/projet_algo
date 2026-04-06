@@ -1,5 +1,5 @@
 #!/bin/bash
-javac -d out src/polynomes/*.java && java -cp out polynomes.Main
+javac -d out src/polynomes/*.java 
 java -cp out polynomes.Main
 
 
