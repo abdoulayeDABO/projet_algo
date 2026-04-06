@@ -1,77 +1,73 @@
 package polynomes;
 
 public class Operations {
-    // fonction d'addition de deux polynomes
-    public static Polynome additionner(Polynome p1, Polynome p2) {
-        Monome tete = null;
-        // cette variable nous permet de savoir ou rattacher le prochain monome resultat
+
+    // ── Utilitaire : copie profonde d'un polynôme ──────────────────────────────
+    private static Polynome copier(Polynome p) {
+        Polynome copie = new Polynome(null);
+        Monome m = p.tete;
+        // on parcourt de la tête → on insère en queue pour garder l'ordre
         Monome queue = null;
-        // on recupere les têtes des deux polynomes a additionner pour pouvoir les
-        // parcourir simultanement
-        Monome m1 = p1.tete;
-        Monome m2 = p2.tete;
-        // tant que l'un des deux polynomes n'est pas encore parcouru entierement
+        while (m != null) {
+            Monome nouveau = new Monome(m.coefficient, m.exposant);
+            if (copie.tete == null)
+                copie.tete = nouveau;
+            else
+                queue.suivant = nouveau;
+            queue = nouveau;
+            m = m.suivant;
+        }
+        return copie;
+    }
+
+    // ── Q6 : Addition ──────────────────────────────────────────────────────────
+    public static Polynome additionner(Polynome p1, Polynome p2) {
+        Monome tete = null, queue = null;
+        Monome m1 = p1.tete, m2 = p2.tete;
         while (m1 != null || m2 != null) {
             double coef;
             int exp;
-            // si on a fini de parcourir p1, on prend p2
             if (m1 == null) {
                 coef = m2.coefficient;
                 exp = m2.exposant;
                 m2 = m2.suivant;
             } else if (m2 == null) {
-                // si on a fini de parcourir p2, on prend p1
                 coef = m1.coefficient;
                 exp = m1.exposant;
                 m1 = m1.suivant;
             } else if (m1.exposant == m2.exposant) {
-                // si ils ont le meme degre : on additionne les coefficients
                 coef = m1.coefficient + m2.coefficient;
                 exp = m1.exposant;
                 m1 = m1.suivant;
                 m2 = m2.suivant;
-
             } else if (m1.exposant > m2.exposant) {
-                // si m1 a le plus grand degre,on prend m1 et on avance dans m1
                 coef = m1.coefficient;
                 exp = m1.exposant;
                 m1 = m1.suivant;
             } else {
-                // si p2 a le plus grand degre, on prend p2 et on avance dans p2
                 coef = m2.coefficient;
                 exp = m2.exposant;
                 m2 = m2.suivant;
             }
-            // on ignore les coefficients nuls car ils n'ont pas d'impact sur le resultat
             if (coef != 0) {
-                // on cree un nouveau monome avec le coefficient et l'exposant calcules pour ce
-                // degre
                 Monome nouveau = new Monome(coef, exp);
-                // si la tete est nulle,cad on est au debut de la liste, on initialise la tete
-                // avec le nouveau monome
                 if (tete == null)
                     tete = nouveau;
-                // sinon on ajoute ce monome a la fin de notre polynome resultat
                 else
                     queue.suivant = nouveau;
                 queue = nouveau;
             }
         }
-        // on retourne le Polynome resultat
         return new Polynome(tete);
     }
 
-    // fonction de soustraction de deux polynomes
+    // ── Q6 : Soustraction ─────────────────────────────────────────────────────
     public static Polynome soustraire(Polynome p1, Polynome p2) {
-        Monome tete = null;
-        Monome queue = null;
-        Monome m1 = p1.tete;
-        Monome m2 = p2.tete;
+        Monome tete = null, queue = null;
+        Monome m1 = p1.tete, m2 = p2.tete;
         while (m1 != null || m2 != null) {
             double coef;
             int exp;
-            // on va appliquer la meme logique que pour l'addition, mais en soustrayant les
-            // coefficients de p2 au lieu de les additionner
             if (m1 == null) {
                 coef = -m2.coefficient;
                 exp = m2.exposant;
@@ -94,8 +90,6 @@ public class Operations {
                 exp = m2.exposant;
                 m2 = m2.suivant;
             }
-            // si on a un coefficient non nul, on cree un nouveau monome et on l'ajoute a la
-            // fin de notre polynome resultat
             if (coef != 0) {
                 Monome nouveau = new Monome(coef, exp);
                 if (tete == null)
@@ -105,35 +99,161 @@ public class Operations {
                 queue = nouveau;
             }
         }
-        //
         return new Polynome(tete);
     }
-    // test des fonctions d'addition et de soustraction de polynomes
-    // public static void main(String[] args) {
-    // //sachant que la fonction de tri n'a pas encore ete implementee, on va creer
-    // les polynomes de test en ajoutant les monomes dans l'ordre decroissant des
-    // exposants pour faciliter les calculs
-    // Polynome p1 = new Polynome(null);
-    // p1.ajouterMonome(1, 0); // 1
-    // p1.ajouterMonome(2, 1); // 2X
-    // p1.ajouterMonome(3, 2); // 3X^2
 
-    // Polynome p2 = new Polynome(null);
-    // p2.ajouterMonome(4, 0); // 4
-    // p2.ajouterMonome(-3, 2); // -3X^2
-    // p2.ajouterMonome(5, 3); // 5X^3
+    // ── Q6 : Multiplication ───────────────────────────────────────────────────
+    // Formule du sujet : P×Q = (a*X^n + P') × (b*X^m + Q')
+    // = a*b*X^(n+m) + a*X^n×Q' + P'×Q
+    public static Polynome multiplier(Polynome p1, Polynome p2) {
+        Polynome resultat = new Polynome(null);
+        Monome m1 = p1.tete;
+        while (m1 != null) {
+            Monome m2 = p2.tete;
+            while (m2 != null) {
+                // On alloue un nouveau maillon pour chaque produit partiel
+                resultat.ajouterMonome(
+                        m1.coefficient * m2.coefficient,
+                        m1.exposant + m2.exposant);
+                m2 = m2.suivant;
+            }
+            m1 = m1.suivant;
+        }
+        return resultat;
+    }
 
-    // System.out.println("P1 : ");
-    // p1.afficher();
-    // System.out.println("P2 : ");
-    // p2.afficher();
+    // ── Q6 : Division euclidienne ─────────────────────────────────────────────
+    // Renvoie le quotient ; le reste est mis dans reste[0]
+    public static Polynome quotient(Polynome dividende, Polynome diviseur, Polynome[] reste) {
+        if (diviseur.tete == null) {
+            System.out.println("Erreur : division par le polynome nul");
+            System.exit(1);
+        }
+        Polynome quotient = new Polynome(null);
+        Polynome r = copier(dividende); // on travaille sur une copie
 
-    // Polynome somme = additionner(p1, p2);
-    // System.out.println("P1 + P2 : ");
-    // somme.afficher();
+        // Tant que deg(reste) >= deg(diviseur)
+        while (r.tete != null && r.tete.exposant >= diviseur.tete.exposant) {
+            // Terme dominant du quotient
+            double coefQ = r.tete.coefficient / diviseur.tete.coefficient;
+            int expQ = r.tete.exposant - diviseur.tete.exposant;
 
-    // Polynome difference = soustraire(p1, p2);
-    // System.out.println("P1 - P2 : ");
-    // difference.afficher();
-    // }
+            quotient.ajouterMonome(coefQ, expQ); // nouveau maillon alloué
+
+            // Soustraction : reste ← reste - coefQ*X^expQ * diviseur
+            Polynome terme = new Polynome(null);
+            terme.ajouterMonome(coefQ, expQ);
+            Polynome produit = multiplier(terme, diviseur);
+            r = soustraire(r, produit);
+        }
+
+        reste[0] = r;
+        return quotient;
+    }
+
+    // À ajouter dans Operations.java
+
+    // ── Q8 : Addition récursive
+    // ───────────────────────────────────────────────────
+    public static Polynome additionnerRecursif(Polynome p1, Polynome p2) {
+        return new Polynome(addRec(p1.tete, p2.tete));
+    }
+
+    private static Monome addRec(Monome m1, Monome m2) {
+        // Cas de base : les deux listes sont épuisées
+        if (m1 == null && m2 == null)
+            return null;
+
+        double coef;
+        int exp;
+        Monome suite1, suite2;
+
+        if (m1 == null) {
+            coef = m2.coefficient;
+            exp = m2.exposant;
+            suite1 = null;
+            suite2 = m2.suivant;
+        } else if (m2 == null) {
+            coef = m1.coefficient;
+            exp = m1.exposant;
+            suite1 = m1.suivant;
+            suite2 = null;
+        } else if (m1.exposant > m2.exposant) {
+            coef = m1.coefficient;
+            exp = m1.exposant;
+            suite1 = m1.suivant;
+            suite2 = m2;
+        } else if (m2.exposant > m1.exposant) {
+            coef = m2.coefficient;
+            exp = m2.exposant;
+            suite1 = m1;
+            suite2 = m2.suivant;
+        } else {
+            // même exposant → addition des coefficients
+            coef = m1.coefficient + m2.coefficient;
+            exp = m1.exposant;
+            suite1 = m1.suivant;
+            suite2 = m2.suivant;
+        }
+
+        // Appel récursif sur le reste
+        Monome reste = addRec(suite1, suite2);
+
+        if (coef == 0)
+            return reste; // on ne crée pas de maillon nul
+
+        // Nouveau maillon en tête du résultat
+        Monome nouveau = new Monome(coef, exp);
+        nouveau.suivant = reste;
+        return nouveau;
+    }
+
+    // ── Q8 : Soustraction récursive
+    // ───────────────────────────────────────────────
+    public static Polynome soustraireRecursif(Polynome p1, Polynome p2) {
+        return new Polynome(sousRec(p1.tete, p2.tete));
+    }
+
+    private static Monome sousRec(Monome m1, Monome m2) {
+        if (m1 == null && m2 == null)
+            return null;
+
+        double coef;
+        int exp;
+        Monome suite1, suite2;
+
+        if (m1 == null) {
+            coef = -m2.coefficient;
+            exp = m2.exposant;
+            suite1 = null;
+            suite2 = m2.suivant;
+        } else if (m2 == null) {
+            coef = m1.coefficient;
+            exp = m1.exposant;
+            suite1 = m1.suivant;
+            suite2 = null;
+        } else if (m1.exposant > m2.exposant) {
+            coef = m1.coefficient;
+            exp = m1.exposant;
+            suite1 = m1.suivant;
+            suite2 = m2;
+        } else if (m2.exposant > m1.exposant) {
+            coef = -m2.coefficient;
+            exp = m2.exposant;
+            suite1 = m1;
+            suite2 = m2.suivant;
+        } else {
+            coef = m1.coefficient - m2.coefficient;
+            exp = m1.exposant;
+            suite1 = m1.suivant;
+            suite2 = m2.suivant;
+        }
+
+        Monome reste = sousRec(suite1, suite2);
+        if (coef == 0)
+            return reste;
+        Monome nouveau = new Monome(coef, exp);
+        nouveau.suivant = reste;
+        return nouveau;
+    }
 }
