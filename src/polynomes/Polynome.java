@@ -12,7 +12,6 @@ public class Polynome {
         if (coefficient == 0)
             return;
 
-        // Cas 1 : liste vide ou degré plus grand que la tête
         if (tete == null || exposant > tete.exposant) {
             Monome nouveau = new Monome(coefficient, exposant);
             nouveau.suivant = tete;
@@ -20,7 +19,6 @@ public class Polynome {
             return;
         }
 
-        // Cas 2 : même degré que la tête → fusion
         if (tete.exposant == exposant) {
             tete.coefficient += coefficient;
             if (tete.coefficient == 0)
@@ -28,19 +26,16 @@ public class Polynome {
             return;
         }
 
-        // Cas 3 : parcours pour trouver la bonne position
         Monome courant = tete;
         while (courant.suivant != null && courant.suivant.exposant > exposant) {
             courant = courant.suivant;
         }
 
         if (courant.suivant != null && courant.suivant.exposant == exposant) {
-            // Fusion avec un monôme existant de même degré
             courant.suivant.coefficient += coefficient;
             if (courant.suivant.coefficient == 0)
                 courant.suivant = courant.suivant.suivant;
         } else {
-            // Insertion entre courant et courant.suivant
             Monome nouveau = new Monome(coefficient, exposant);
             nouveau.suivant = courant.suivant;
             courant.suivant = nouveau;
